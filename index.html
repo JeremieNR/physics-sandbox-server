@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+	<head>
+	  <meta charset="utf-8" />
+	  <title>2D Physics Viewer</title>
+	  <style>html,body,canvas{height:100%;margin:0}</style>
+	</head>
+<body>
+	<canvas id="c"></canvas>
+	<script>
+		const canvas = document.getElementById('c');
+		const ctx = canvas.getContext('2d');
+		function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
+		resize(); addEventListener('resize', resize);
+
+		const ws = new WebSocket(`ws://${location.host}/ws`);
+		let objects = {};
+
+		ws.onmessage = (ev) => {
+		  const d = JSON.parse(ev.data);
+		  if (d.type === 'state') {
+			objects = {};
+			for (const o of d.state) objects[o.id] = o;
+		  }
+		};
+
+		function simToCanvasY(y){ return y; }
+
+		function draw(){
+		  ctx.clearRect(0,0,canvas.width,canvas.height);
+		  // floor
+		  ctx.fillStyle = '#000F00';
+		  for (const id in objects){
+			const o = objects[id];
+			ctx.beginPath();
+			ctx.arc(o.x, o.y, 20, 0, Math.PI*2);
+			ctx.fill();
+			// velocity vector
+			ctx.beginPath();
+			ctx.moveTo(o.x, o.y);
+			ctx.lineTo(o.x + o.vx*0.05, o.y + o.vy*0.05);
+			ctx.stroke();
+		  }
+		  requestAnimationFrame(draw);
+		}
+		requestAnimationFrame(draw);
+
+		// click to spawn
+		canvas.addEventListener('click', e=>{
+		  const rect = canvas.getBoundingClientRect();
+		  const x = e.clientX - rect.left;
+		  const y = e.clientY - rect.top;
+		  ws.send(JSON.stringify({type:'spawn', x, y}));
+		});
+	</script>
+</body>
+</html>
+
