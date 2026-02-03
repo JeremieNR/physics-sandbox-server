@@ -2,18 +2,17 @@ import asyncio, json, uuid
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 import pymunk
+from pathlib import Path
+from fastapi.responses import HTMLResponse
 
 app = FastAPI()
-@app.get("/")
-async def index():
-    return FileResponse("index.html")
 
 # simulation
 space = pymunk.Space()
 space.gravity = (0, 900)  # tweak
 
 # simple floor
-floor = pymunk.Segment(space.static_body, (0, 500), (1000, 500), 5)
+floor = pymunk.Segment(space.static_body, (0, 500), (10000, 500), 0)
 floor.friction = 1.0
 space.add(floor)
 
@@ -67,6 +66,10 @@ async def sim_loop():
 @app.on_event("startup")
 async def startup():
     asyncio.create_task(sim_loop())
+
+@app.get("/")
+async def serve_index():
+    return HTMLResponse((Path(__file__).parent / "index.html").read_text())
 
 @app.websocket("/ws")
 async def ws_endpoint(websocket: WebSocket):

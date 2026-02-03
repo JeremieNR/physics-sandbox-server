@@ -29,7 +29,8 @@
 		function draw(){
 		  ctx.clearRect(0,0,canvas.width,canvas.height);
 		  // floor
-		  ctx.fillStyle = '#000F00';
+          ctx.fillStyle = '#000000';
+          ctx.fillRect(0, 500, canvas.width, 5);
 		  for (const id in objects){
 			const o = objects[id];
 			ctx.beginPath();
